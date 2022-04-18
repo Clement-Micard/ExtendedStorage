@@ -4,9 +4,9 @@ The Extended Storage library allows developers of UWP apps to access every file 
 - Full access to the filesystem (Including hidden and operating system files) on any UWP device.
 - Writing and reading files.
 - Opening files in stream for further manipulations.
-- It is as easy to use as Windows.Storage API.
 - Archive system for Creation/Extraction.
 - Access to the external storage drives.
+- It is as easy to use as Windows.Storage API.
 
 This powerful library was developed by myself and [tunip3](https://github.com/tunip3/tunip3).
 
