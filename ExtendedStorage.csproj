@@ -120,24 +120,24 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Archive\ArchiveCreator.cs" />
-    <Compile Include="Archive\ArchiveExtractor.cs" />
-    <Compile Include="Archive\ArchiveHelper.cs" />
-    <Compile Include="Enums\DepthOption.cs" />
-    <Compile Include="Enums\DriveLetters.cs" />
-    <Compile Include="Enums\EStorageItemTypes.cs" />
-    <Compile Include="Enums\FileAlreadyExists.cs" />
-    <Compile Include="Enums\NameMatchOption.cs" />
-    <Compile Include="EStorageFile.cs" />
-    <Compile Include="EStorageFolder.cs" />
-    <Compile Include="EStorageItem.cs" />
-    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="src\Archive\ArchiveCreator.cs" />
+    <Compile Include="src\Archive\ArchiveExtractor.cs" />
+    <Compile Include="src\Archive\ArchiveHelper.cs" />
+    <Compile Include="src\Enums\DepthOption.cs" />
+    <Compile Include="src\Enums\DriveLetters.cs" />
+    <Compile Include="src\Enums\EStorageItemTypes.cs" />
+    <Compile Include="src\Enums\FileAlreadyExists.cs" />
+    <Compile Include="src\Enums\NameMatchOption.cs" />
+    <Compile Include="src\EStorageFile.cs" />
+    <Compile Include="src\EStorageFolder.cs" />
+    <Compile Include="src\EStorageItem.cs" />
+    <Compile Include="src\Extensions\StringExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\DiskUtils.cs" />
-    <Compile Include="Utils\FileReader.cs" />
-    <Compile Include="Utils\FileWriter.cs" />
-    <Compile Include="Utils\StorageUtils.cs" />
-    <Compile Include="Win32.cs" />
+    <Compile Include="src\Utils\DiskUtils.cs" />
+    <Compile Include="src\Utils\FileReader.cs" />
+    <Compile Include="src\Utils\FileWriter.cs" />
+    <Compile Include="src\Utils\StorageUtils.cs" />
+    <Compile Include="src\Win32.cs" />
     <EmbeddedResource Include="Properties\ExtendedStorage.rd.xml" />
   </ItemGroup>
   <ItemGroup>
