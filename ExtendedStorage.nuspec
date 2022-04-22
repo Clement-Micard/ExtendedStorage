@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package >
-  <metadata>
-    <id>Osaxely.ExtendedStorage</id>
-    <version>0.5</version>
-    <title>ExtendedStorage</title>
-    <authors>Osaxely</authors>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <license type="expression">MIT</license>
-    <!-- <icon>icon.png</icon> -->
-    <description>ExtendedStorage if a library based on the Win32 COM API for managing the storage in UWP apps. Unlike the Windows.Storage API, it allows to get access to every kind of file/folder, including the operating system files. \n\n**In order to see all the files, you need to declare the capabilities "runFullTrust" and "broadFileSystemAccess".</description>
-    <releaseNotes>First release of ExtendedStorage library.</releaseNotes>
-    <copyright>© Osaxely</copyright>
-    <tags>Storage UWP Xbox Windows Extended runFullTrust broadFileSystemAccess</tags>
-  </metadata>
+	<metadata>
+		<id>Osaxely.ExtendedStorage</id>
+		<version>0.2</version>
+		<title>Extended Storage</title>
+		<authors>Osaxely, tunip3</authors>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<license type="expression">MIT</license>
+		<projectUrl>https://github.com/Osaxely/ExtendedStorage</projectUrl>
+		<readme>docs\README.md</readme>
+		<!-- <icon>icon.png</icon> -->
+		<description>Extended Storage is a library which allows developers of UWP apps to get access to every file of the system using the WIN32 API.</description>
+		<releaseNotes>First release of ExtendedStorage library.</releaseNotes>
+		<copyright>© Osaxely</copyright>
+		<tags>Storage UWP Xbox Windows Extended runFullTrust broadFileSystemAccess</tags>
+	</metadata>
 	<files>
 		<!-- DLLs and resources -->
 		<file src=".\bin\ARM\Debug\ExtendedStorage.dll" target="runtimes\win10-arm\native"/>
@@ -21,5 +23,6 @@
 		<file src=".\bin\ARM64\Debug\ExtendedStorage.pri" target="runtimes\win10-arm64\native"/>
 		<file src=".\bin\x64\Debug\ExtendedStorage.dll" target="runtimes\win10-x64\native"/>
 		<file src=".\bin\x64\Debug\ExtendedStorage.pri" target="runtimes\win10-x64\native"/>
+		<file src=".\README.md" target="docs\" />
 	</files>
 </package>

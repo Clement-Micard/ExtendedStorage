@@ -14,12 +14,10 @@ namespace ExtendedStorage
         public string DisplayName { get; internal set; }
         public string FileType { get; internal set; }
 
-        internal EStorageFile(FileAttributes attributes, DateTimeOffset dateCreated,
-            string displayName, string fileType, string name, string path)
+        internal EStorageFile(FileAttributes attributes, DateTimeOffset dateCreated, string fileType, string name, string path)
         {
             Attributes = attributes;
             DateCreated = dateCreated;
-            DisplayName = displayName;
             FileType = fileType;
             Name = name;
             Path = path;
@@ -32,25 +30,20 @@ namespace ExtendedStorage
         /// <returns>Returns the file as ExtendedStorageFile if exists</returns>
         public static EStorageFile GetFromPath(string path)
         {
-            EStorageFile fileToReturn;
-            if (IsFile(path))
+            bool exists = GetFileAttributesExFromApp(path, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out WIN32_FILE_ATTRIBUTE_DATA fileData);
+            if (!exists)
             {
-                if (GetFileAttributesExFromApp(path, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out WIN32_FILE_ATTRIBUTE_DATA fileData))
-                {
-                    fileToReturn = new EStorageFile(fileData.dwFileAttributes, DiskHelpers.GetCreationDate(fileData.ftCreationTime.dwHighDateTime, 
-                        fileData.ftCreationTime.dwHighDateTime), System.IO.Path.GetFileNameWithoutExtension(path), System.IO.Path.GetExtension(path), System.IO.Path.GetFileName(path), 
-                        path.FormatPath());
-                }
-                else
-                {
-                    fileToReturn = null;
-                }
+                return null;
+            }
+
+            if (fileData.dwFileAttributes.HasFlag(FileAttributes.Directory) == false)
+            {
+                return new EStorageFile(fileData.dwFileAttributes, DiskHelpers.GetCreationDate(fileData.ftCreationTime.dwHighDateTime, fileData.ftCreationTime.dwHighDateTime), System.IO.Path.GetExtension(path), System.IO.Path.GetFileName(path), path.FormatPath());
             }
             else
             {
-                fileToReturn = null;
+                return null;
             }
-            return fileToReturn;
         }
 
         /// <summary>
@@ -73,9 +66,8 @@ namespace ExtendedStorage
         {
             if (this != null && destination != null && name != null)
             {
-                CopyFileFromApp(Path, (destination.Path + @"\" + name).FormatPath(), false);
+                MoveFileFromApp(Path, $"{destination.Path}\\{name}");
                 CopyFilePermission(destination.Path);
-                DeleteFileFromApp(Path);
                 return GetFromPath(destination.Path);
             }
             return null;
@@ -137,6 +129,15 @@ namespace ExtendedStorage
                 return GetFromPath(destination.Path);
             }
             return null;
+        }
+
+        /// <summary>
+        /// Delete the current EStorageFile.
+        /// </summary>
+        /// <returns>Returns wether the file was deleted or not.</returns>
+        public bool Delete()
+        {
+            return DeleteFileFromApp(Path);
         }
     }
 }

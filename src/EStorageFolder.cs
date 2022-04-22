@@ -4,8 +4,8 @@ using ExtendedStorage.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using FileAttributes = System.IO.FileAttributes;
 using static ExtendedStorage.Win32;
+using FileAttributes = System.IO.FileAttributes;
 
 namespace ExtendedStorage
 {
@@ -26,23 +26,20 @@ namespace ExtendedStorage
         /// <returns>Returns the folder as ExtendedStorageFolder if the folder exists, else it returns null</returns>
         public static EStorageFolder GetFromPath(string path)
         {
-            EStorageFolder folderToReturn;
-            if (IsFolder(path))
+            bool exists = GetFileAttributesExFromApp(path, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out WIN32_FILE_ATTRIBUTE_DATA fileData);
+            if (!exists)
             {
-                DateTimeOffset cdate = DateTimeOffset.Now;
-                if (GetFileAttributesExFromApp(path, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out WIN32_FILE_ATTRIBUTE_DATA fileData))
-                {
-                    cdate = DiskHelpers.GetCreationDate(fileData.ftCreationTime.dwHighDateTime, fileData.ftCreationTime.dwHighDateTime);
-                }
+                return null;
+            }
 
-                FileAttributes attributes = fileData.dwFileAttributes;
-                folderToReturn = new EStorageFolder(attributes, cdate, new DirectoryInfo(path).Name, path.FormatPath());
+            if (fileData.dwFileAttributes.HasFlag(FileAttributes.Directory))
+            {
+                return new EStorageFolder(fileData.dwFileAttributes, DiskHelpers.GetCreationDate(fileData.ftCreationTime.dwHighDateTime, fileData.ftCreationTime.dwHighDateTime), new DirectoryInfo(path).Name, path.FormatPath());
             }
             else
             {
-                folderToReturn = null;
+                return null;
             }
-            return folderToReturn;
         }
 
         /// <summary>
@@ -51,9 +48,9 @@ namespace ExtendedStorage
         /// <param name="destination">The destination (Ex: C:\MyFolder\myNewFolder)</param>
         /// <param name="creationCollision">The action executed if the folder already exists (Default: FailIfExists))</param>
         /// <returns>Returns the new destination as ExtendedStorageFolder if successful, returns null by default if NameCollisionOption was not defined.</returns>
-        public void MoveTo(EStorageFolder destination, string newName = null)
+        public void MoveTo(EStorageFolder destination, string newName = "")
         {
-            if (newName == null)
+            if (newName == "")
             {
                 destination = destination.CreateFolder(Name);
             }
@@ -62,7 +59,6 @@ namespace ExtendedStorage
                 destination = destination.CreateFolder(newName);
             }
 
-            // Avoid using EStorageFile and EStorageFolder, for less memory consumption and quicker process.
             IntPtr hFile = FindFirstFileExFromApp($"{Path}\\*.*", FINDEX_INFO_LEVELS.FindExInfoBasic, out WIN32_FIND_DATA findData, FINDEX_SEARCH_OPS.FindExSearchNameMatch, IntPtr.Zero, FIND_FIRST_EX_LARGE_FETCH);
             do
             {
@@ -77,9 +73,8 @@ namespace ExtendedStorage
                     // Files
                     if (!((FileAttributes)findData.dwFileAttributes & FileAttributes.Directory).HasFlag(FileAttributes.Directory))
                     {
-                        CopyFileFromApp($"{Path}\\{findData.cFileName}", $"{destination.Path}\\{findData.cFileName}", false);
+                        MoveFileFromApp($"{Path}\\{findData.cFileName}", $"{destination.Path}\\{findData.cFileName}");
                         CopyFilePermission(destination.Path);
-                        DeleteFileFromApp(Path);
                     }
 
                     // Folders
@@ -98,11 +93,6 @@ namespace ExtendedStorage
         /// <param name="destination">The destination as EStorageFolder</param>
         public void CopyTo(EStorageFolder destination, string name)
         {
-            if (this == null)
-            {
-                return;
-            }
-
             EStorageFolder root = destination.CreateFolder(name);
             destination = root;
 
@@ -175,17 +165,9 @@ namespace ExtendedStorage
         /// Get all folders in an EStorageFolder
         /// </summary>
         /// <returns>Returns the found folders as IReadonlyList<EStorageFolder></returns>
-        public IReadOnlyList<EStorageFolder> GetFolders()
+        public IEnumerable<EStorageFolder> GetFolders()
         {
-            if (this == null)
-            {
-                return null;
-            }
-
-            List<EStorageFolder> folders = new List<EStorageFolder>();
-            FINDEX_INFO_LEVELS findInfoLevel = FINDEX_INFO_LEVELS.FindExInfoBasic;
-            int additionalFlags = FIND_FIRST_EX_LARGE_FETCH;
-            IntPtr hFile = FindFirstFileExFromApp(Path + "\\*.*", findInfoLevel, out WIN32_FIND_DATA findData, FINDEX_SEARCH_OPS.FindExSearchNameMatch, IntPtr.Zero, additionalFlags);
+            IntPtr hFile = FindFirstFileExFromApp(Path + "\\*.*", FINDEX_INFO_LEVELS.FindExInfoBasic, out WIN32_FIND_DATA findData, FINDEX_SEARCH_OPS.FindExSearchNameMatch, IntPtr.Zero, FIND_FIRST_EX_LARGE_FETCH);
             if (hFile.ToInt64() != -1)
             {
                 do
@@ -197,37 +179,32 @@ namespace ExtendedStorage
 
                     if (((FileAttributes)findData.dwFileAttributes).HasFlag(FileAttributes.Directory))
                     {
-                        folders.Add(GetFromPath((Path + @"\" + findData.cFileName).FormatPath())); // Add the folder to the list
+                        yield return GetFromPath((Path + @"\" + findData.cFileName).FormatPath());
                     }
                 } while (FindNextFile(hFile, out findData));
                 FindClose(hFile);
             }
-            return folders;
         }
 
         /// <summary>
         /// Get all files in an EStorageFolder
         /// </summary>
         /// <returns>Returns the files as IReadOnlyList<EStorageFile></returns>
-        public IReadOnlyList<EStorageFile> GetFiles()
+        public IEnumerable<EStorageFile> GetFiles(string filter = "*.*")
         {
-            List<EStorageFile> files = new List<EStorageFile>();
-            FINDEX_INFO_LEVELS findInfoLevel = FINDEX_INFO_LEVELS.FindExInfoBasic;
-            int additionalFlags = FIND_FIRST_EX_LARGE_FETCH;
-            IntPtr hFile = FindFirstFileExFromApp(Path + "\\*.*", findInfoLevel, out WIN32_FIND_DATA findData, FINDEX_SEARCH_OPS.FindExSearchNameMatch, IntPtr.Zero,
-                additionalFlags);
+            IntPtr hFile = FindFirstFileExFromApp($"{Path}\\{filter}", FINDEX_INFO_LEVELS.FindExInfoBasic, out WIN32_FIND_DATA findData, FINDEX_SEARCH_OPS.FindExSearchNameMatch, IntPtr.Zero,
+                FIND_FIRST_EX_LARGE_FETCH);
             do
             {
                 if (hFile.ToInt64() != -1)
                 {
                     if (!((FileAttributes)findData.dwFileAttributes & FileAttributes.Directory).HasFlag(FileAttributes.Directory))
                     {
-                        files.Add(EStorageFile.GetFromPath((Path + @"\" + findData.cFileName).FormatPath())); // Add the file to the list
+                        yield return EStorageFile.GetFromPath($"{Path}\\{findData.cFileName}"); // Return the file.
                     }
                 }
             } while (FindNextFile(hFile, out findData));
             FindClose(hFile);
-            return files;
         }
 
         /// <summary>
@@ -235,11 +212,79 @@ namespace ExtendedStorage
         /// </summary>
         /// <param name="source">Source folder.</param>
         /// <returns>Returns a list of all found items.</returns>
-        public IReadOnlyList<EStorageItem> GetItems()
+        public IEnumerable<EStorageItem> GetItems()
         {
-            List<EStorageItem> items = new List<EStorageItem>(GetFiles());
-            items.AddRange(GetFolders());
-            return items;
+            foreach (EStorageFile file in GetFiles())
+            {
+                yield return file;
+            }
+
+            foreach (EStorageFolder folder in GetFolders())
+            {
+                yield return folder;
+            }
+        }
+
+        /// <summary>
+        /// Deletes an item.
+        /// </summary>
+        /// <param name="item">The item to delete.</param>
+        /// <returns>Returns true if the item was deleted, else false.</returns>
+        public bool Delete()
+        {
+            return DeleteDirectory(Path);
+        }
+
+        /// <summary>
+        /// Deletes an extended file from its path.
+        /// </summary>
+        /// <param name="itemPath">The item path to delete.</param>
+        /// <returns>Returns true if the item was deleted, else false.</returns>
+        private bool DeleteDirectory(string itemPath)
+        {
+            bool isDeleted = false;
+            bool isFailed = false;
+
+            FINDEX_INFO_LEVELS findInfoLevel = FINDEX_INFO_LEVELS.FindExInfoBasic;
+            int additionalFlags = FIND_FIRST_EX_LARGE_FETCH;
+            IntPtr hFile = FindFirstFileExFromApp(itemPath.TrimEnd(new char[] { '\\' }) + @"\*", findInfoLevel, out WIN32_FIND_DATA findData, FINDEX_SEARCH_OPS.FindExSearchNameMatch, IntPtr.Zero,
+                additionalFlags);
+
+            if (hFile.ToInt64() != -1)
+            {
+                do
+                {
+                    string path = string.Format("{0}\\{1}", itemPath.TrimEnd(new char[] { '\\' }), findData.cFileName);
+
+                    if (((FileAttributes)findData.dwFileAttributes & FileAttributes.Directory) == FileAttributes.Directory)
+                    {
+                        if (findData.cFileName != "." && findData.cFileName != "..")
+                        {
+                            if (!DeleteDirectory(path))
+                            {
+                                isFailed = true;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!DeleteFileFromApp(path))
+                        {
+                            isFailed = true;
+                            break;
+                        }
+                    }
+                }
+                while (FindNextFile(hFile, out findData));
+                FindClose(hFile);
+                if (!isFailed)
+                {
+                    isDeleted = RemoveDirectoryFromApp(itemPath);
+                }
+            }
+
+            return isDeleted;
         }
     }
 }

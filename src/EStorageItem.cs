@@ -17,70 +17,26 @@ namespace ExtendedStorage
         {
             if (type == EStorageItemTypes.File)
             {
-                if (this is EStorageFile) return true;
+                if (this is EStorageFile)
+                {
+                    return true;
+                }
             }
             else if (type == EStorageItemTypes.Folder)
             {
-                if (this is EStorageFolder) return true;
+                if (this is EStorageFolder)
+                {
+                    return true;
+                }
             }
             else if (type == EStorageItemTypes.None)
             {
-                if (this is null) return true;
+                if (!(this is EStorageItem))
+                {
+                    return true;
+                }
             }
             return false;
-        }
-
-        /// <summary>
-        /// Deletes an item.
-        /// </summary>
-        /// <param name="item">The item to delete.</param>
-        /// <returns>Returns true if the item was deleted, else false.</returns>
-        public bool Delete()
-        {
-            return DeleteFile(Path);
-        }
-
-        /// <summary>
-        /// Deletes an extended file from its path.
-        /// </summary>
-        /// <param name="itemPath">The item path to delete.</param>
-        /// <returns>Returns true if the item was deleted, else false.</returns>
-        private bool DeleteFile(string itemPath)
-        {
-            bool isDeleted = false;
-            bool isFailed = false;
-
-            if (IsFolder(itemPath))
-            {
-                foreach (EStorageFile file in (this as EStorageFolder).GetFiles())
-                {
-                    if (!DeleteFileFromApp(file.Path))
-                    {
-                        isFailed = true;
-                        break;
-                    }
-                }
-
-                foreach (EStorageFolder folder in (this as EStorageFolder).GetFolders())
-                {
-
-                    if (!DeleteFile(folder.Path))
-                    {
-                        isFailed = true;
-                        break;
-                    }
-                }
-
-                if (!isFailed)
-                {
-                    isDeleted = RemoveDirectoryFromApp(itemPath);
-                }
-            }
-            else
-            {
-                DeleteFileFromApp(itemPath);
-            }
-            return isDeleted;
         }
 
         /// <summary>
@@ -90,7 +46,7 @@ namespace ExtendedStorage
         /// <param name="newName">The new name.</param>
         public EStorageItem Rename(string newName)
         {
-            if (MoveFileFromApp(Path, Directory.GetParent(Path) + @"\" + newName))
+            if (MoveFileFromApp(Path, $"{Directory.GetParent(Path)}\\{newName}"))
             {
                 Path = Directory.GetParent(Path) + @"\" + newName;
                 Name = newName;
@@ -149,12 +105,12 @@ namespace ExtendedStorage
         /// <returns>Returns the parent folder as ExtendedStorageFolder.</returns>
         public EStorageFolder GetParent()
         {
-            DirectoryInfo path = Directory.GetParent(Path);
-            if (path != null)
+            try
             {
+                DirectoryInfo path = Directory.GetParent(Path);
                 return EStorageFolder.GetFromPath(path.FullName);
             }
-            else
+            catch
             {
                 return null;
             }

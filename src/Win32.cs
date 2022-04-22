@@ -84,46 +84,6 @@ namespace ExtendedStorage
         }
 
         /// <summary>
-        /// Determines if an item is a folder or not.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        internal static bool IsFolder(string path)
-        {
-            bool isFolder = false;
-            if (GetFileAttributesExFromApp(path, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out WIN32_FILE_ATTRIBUTE_DATA fileData))
-            {
-                if (fileData.dwFileAttributes.HasFlag(FileAttributes.Directory))
-                {
-                    isFolder = true;
-                }
-            }
-            return isFolder;
-        }
-
-        /// <summary>
-        /// Determines if an item is a file or not.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        internal static bool IsFile(string path)
-        {
-            bool isFile = false;
-            if (GetFileAttributesExFromApp(path, GET_FILEEX_INFO_LEVELS.GetFileExInfoStandard, out WIN32_FILE_ATTRIBUTE_DATA fileData))
-            {
-                if (fileData.dwFileAttributes.HasFlag(FileAttributes.Directory) == false)
-                {
-                    isFile = true;
-                }
-                else
-                {
-                    isFile = false;
-                }
-            }
-            return isFile;
-        }
-
-        /// <summary>
         /// Reads a file.
         /// </summary>
         /// <param name="hFile">File handle.</param>
